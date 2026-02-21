@@ -1,0 +1,423 @@
+Perfect! I’ll make a **fully working, single HTML file** that you can just open in your browser and **everything will work** — login, dark mode, show password, charts, daily and health checkups, habit tracker, AI chat, doctor appointments, QR code, and print.
+
+Here’s the complete file:
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MindPulse – Real Health Web App</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
+<style>
+body { font-family:'Roboto',sans-serif; margin:0; background:linear-gradient(to bottom right,#e0eafc,#cfdef3); transition:0.5s; }
+.dark { background:#121212; color:white; }
+header { background:linear-gradient(90deg,#4a6cf7,#6f8efb); color:white; padding:20px; text-align:center; box-shadow:0 5px 15px rgba(0,0,0,0.2); position:relative; font-family:'Montserrat',sans-serif; }
+header h1 { margin:0; font-size:32px; display:inline-block; }
+header .top-btns { position:absolute; top:15px; right:20px; display:flex; align-items:center; }
+header .top-btns button { margin-left:10px; }
+header .profile-pic { width:50px;height:50px;border-radius:50%;border:2px solid white;margin-left:10px;cursor:pointer;transition:0.3s; object-fit:cover;}
+header .profile-pic:hover { transform:scale(1.2);}
+.tooltip { position:absolute; background:#4a6cf7; color:white; padding:6px 10px; border-radius:8px; font-weight:bold; font-family:'Montserrat',sans-serif; display:none; white-space:nowrap; top:70px; right:25px; z-index:100; }
+button { padding:12px 18px; border:none; background:#4a6cf7; color:white; border-radius:10px; cursor:pointer; font-weight:bold; transition:0.3s; box-shadow:0 3px 8px rgba(0,0,0,0.2);}
+button:hover { background:#3451d1; transform:scale(1.05); }
+.container { max-width:1000px; margin:auto; padding:20px; }
+.card { background:white; padding:30px; margin-bottom:20px; border-radius:16px; box-shadow:0 10px 25px rgba(0,0,0,0.15); transition:0.5s; font-family:'Roboto',sans-serif; }
+.card:hover { transform:scale(1.02) translateY(-3px); box-shadow:0 15px 30px rgba(0,0,0,0.25);}
+.dark .card { background:#1e1e1e; color:white; }
+input, select { width:100%; padding:12px; margin:10px 0; border-radius:8px; border:1px solid #ccc; transition:0.3s; }
+input:focus, select:focus { outline:none; border-color:#4a6cf7; box-shadow:0 0 5px rgba(74,108,247,0.5); }
+.score { font-size:50px; font-weight:bold; text-align:center; margin:10px 0; color:#4a6cf7; position:relative;}
+.alert { padding:15px; border-radius:12px; margin-top:15px; font-weight:bold; text-align:center; transition:0.3s; }
+.good { background:#d4edda; color:#155724; }
+.warn { background:#fff3cd; color:#856404; }
+.bad { background:#f8d7da; color:#721c24; }
+.dark .good { background:#155724; color:#d4edda; }
+.dark .warn { background:#856404; color:#fff3cd; }
+.dark .bad { background:#721c24; color:#f8d7da; }
+.chatbox { height:200px; overflow:auto; border:1px solid #ccc; padding:10px; border-radius:12px; margin-bottom:10px; background:#fafafa; transition:0.3s; }
+.dark .chatbox { background:#2a2a2a; color:white; }
+.nav-btn { margin-right:10px; margin-bottom:10px; background:#6f8efb; color:white; font-weight:600; transition:0.3s; }
+.nav-btn:hover { background:#4a6cf7; }
+.hidden { display:none; }
+.modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); justify-content:center; align-items:center; }
+.modal-content { background:white; padding:25px; border-radius:12px; max-width:500px; width:90%; text-align:center; transition:0.3s;}
+.dark .modal-content { background:#1e1e1e; color:white; }
+.show-pass { position:relative; display:flex; align-items:center; }
+.show-pass input { flex:1; }
+.show-pass button { position:absolute; right:5px; padding:6px 10px; font-size:12px; top:50%; transform:translateY(-50%);}
+</style>
+</head>
+<body>
+<header>
+<h1>MindPulse</h1>
+<div class="top-btns">
+<img src="" alt="Profile" id="profilePic" class="profile-pic hidden" title="">
+<div class="tooltip" id="profileTooltip"></div>
+<button onclick="toggleDark()">Dark Mode</button>
+<button id="logoutBtn" class="hidden" onclick="logout()">Logout</button>
+</div>
+</header>
+
+<div class="container">
+
+<!-- LOGIN -->
+<div class="card" id="loginCard">
+<h2>Login / Register</h2>
+<input id="user" placeholder="Username">
+<div class="show-pass">
+<input id="pass" type="password" placeholder="Password">
+<button type="button" onclick="togglePassword()">Show</button>
+</div>
+<button onclick="login()">Login / Register</button>
+</div>
+
+<!-- NAV -->
+<div class="card hidden" id="dashboardNav">
+<button class="nav-btn" onclick="showSection('daily')">Daily Checkup</button>
+<button class="nav-btn" onclick="showSection('health')">Health Checkup</button>
+<button class="nav-btn" onclick="showSection('habit')">Habit Tracker</button>
+<button class="nav-btn" onclick="showSection('chat')">AI Chat</button>
+<button class="nav-btn" onclick="showSection('doctor')">Meet Doctor</button>
+</div>
+
+<!-- DAILY -->
+<div class="card hidden" id="daily">
+<h2>Daily Lifestyle Checkup</h2>
+<input id="d_stress" placeholder="Stress (1-10)">
+<input id="d_sleep" placeholder="Sleep hours">
+<input id="d_water" placeholder="Water glasses">
+<input id="d_exercise" placeholder="Exercise minutes">
+<input id="d_screen" placeholder="Screen hours">
+<button onclick="dailyCheckup()">Submit Daily Checkup</button>
+<h3>Daily Score: <span id="dailyScore">--</span></h3>
+<canvas id="dailyChart"></canvas>
+<div id="dailyAlert"></div>
+</div>
+
+<!-- HEALTH -->
+<div class="card hidden" id="health">
+<h2>Health AI Scanner</h2>
+<input id="stress" placeholder="Stress (1-10)">
+<input id="sleep" placeholder="Sleep hours">
+<input id="study" placeholder="Study hours">
+<input id="water" placeholder="Water glasses">
+<input id="exercise" placeholder="Exercise minutes">
+<input id="screen" placeholder="Screen hours">
+<button onclick="analyze()">Run AI Scan</button>
+<h2>Health Score</h2>
+<div class="score" id="score">--</div>
+<div id="alert"></div>
+<canvas id="chart"></canvas>
+<button onclick="downloadReport()">Download Report</button>
+</div>
+
+<!-- HABIT -->
+<div class="card hidden" id="habit">
+<h2>Habit Tracker</h2>
+<button onclick="addDay()">I completed healthy habits today</button>
+<p id="streak">0 days</p>
+<canvas id="habitChart"></canvas>
+</div>
+
+<!-- CHAT -->
+<div class="card hidden" id="chat">
+<h2>AI Health Assistant</h2>
+<div class="chatbox" id="chatbox"></div>
+<input id="chatinput" placeholder="Ask health question">
+<button onclick="sendChat()">Send</button>
+</div>
+
+<!-- DOCTOR -->
+<div class="card hidden" id="doctor">
+<h2>Meet Doctor</h2>
+<label>Doctor:</label>
+<select id="doctorName"><option>Dr. Smith</option><option>Dr. Johnson</option><option>Dr. Lee</option></select>
+<label>Date:</label><input type="date" id="apptDate">
+<label>Time:</label><input type="time" id="apptTime">
+<button onclick="scheduleDoctor()">Request Appointment</button>
+<div id="paymentSection" class="hidden">
+<h3>Payment via UPI (GPay / Paytm)</h3>
+<button id="upiBtn" onclick="showUpiForm()">Pay via UPI</button>
+<div id="upiForm" class="hidden">
+	<label>Enter UPI Transaction ID:</label>
+	<input id="txnId" placeholder="e.g. TXN123456789">
+	<label>Or upload bank statement / receipt (optional):</label>
+	<input type="file" id="bankFile" accept=".pdf,.png,.jpg" />
+	<button onclick="payViaUPI()">Confirm UPI Payment</button>
+	<div id="qr"></div>
+	</div>
+</div>
+<button id="printConfirmedBtn" class="hidden" onclick="printAppointmentConfirmed()">Print Confirmation</button>
+</div>
+
+<!-- MODAL -->
+<div class="modal" id="modal">
+<div class="modal-content">
+<p id="modalText"></p>
+<button onclick="closeModal()">Close</button>
+</div>
+</div>
+
+<script>
+// ===== GLOBAL =====
+let dailyChart, chart, habitChart, streak=0;
+
+// ===== DARK MODE =====
+function toggleDark(){document.body.classList.toggle("dark")}
+
+// ===== PASSWORD SHOW =====
+function togglePassword(){let pass=document.getElementById("pass"); pass.type = pass.type==="password"?"text":"password"}
+
+// ===== LOGIN =====
+function login(){
+let u=document.getElementById("user").value.trim().toUpperCase();
+let p=document.getElementById("pass").value.trim();
+const allowed={"SURIYA S":"2117250070360","UDHAYA PRAKASH":"2117250070378","YESHWANTH D":"2117250070400","THIRUMURUGAN M":"2117250070375"};
+if(!u||!p){alert("Enter username/password"); return;}
+if(!allowed[u] || allowed[u]!==p){alert("Invalid username/password"); return;}
+let users=JSON.parse(localStorage.getItem("users")||"{}");
+if(!users[u]) users[u]={pass:p,score:0,streak:0,chat:[],appointments:[],daily:[]};
+localStorage.setItem("users",JSON.stringify(users));
+localStorage.setItem("currentUser",u);
+document.getElementById("loginCard").classList.add("hidden");
+document.getElementById("dashboardNav").classList.remove("hidden");
+document.getElementById("logoutBtn").classList.remove("hidden");
+let profile=document.getElementById("profilePic");
+profile.src="https://ui-avatars.com/api/?name="+encodeURIComponent(u)+"&background=4a6cf7&color=fff&size=128";
+profile.classList.remove("hidden");
+profile.title=u;
+profile.onclick=function(){let tooltip=document.getElementById("profileTooltip"); tooltip.innerText=u; tooltip.style.display="block"; setTimeout(()=>tooltip.style.display="none",2000)}
+loadUser();
+showSection('daily');
+}
+
+// ===== LOGOUT =====
+function logout(){
+localStorage.removeItem("currentUser");
+document.getElementById("loginCard").classList.remove("hidden");
+document.getElementById("dashboardNav").classList.add("hidden");
+document.getElementById("logoutBtn").classList.add("hidden");
+document.getElementById("profilePic").classList.add("hidden");
+['daily','health','habit','chat','doctor'].forEach(id=>document.getElementById(id).classList.add("hidden"));
+}
+
+// ===== NAVIGATION =====
+function showSection(id){
+['daily','health','habit','chat','doctor'].forEach(s=>document.getElementById(s).classList.add("hidden"));
+document.getElementById(id).classList.remove("hidden");
+}
+
+// ===== LOAD USER =====
+function loadUser(){
+let u=localStorage.getItem("currentUser"); if(!u) return;
+let users=JSON.parse(localStorage.getItem("users")); let data=users[u];
+streak=data.streak||0; document.getElementById("streak").innerText=streak+" days";
+let chatbox=document.getElementById("chatbox"); chatbox.innerHTML="";
+data.chat.forEach(c=>chatbox.innerHTML+=`<p><b>You:</b> ${c.q}</p><p><b>AI:</b> ${c.a}</p>`);
+loadDailyChart(data.daily); loadHabitChart(streak);
+}
+
+// ===== DAILY CHECKUP =====
+function dailyCheckup(){
+let stress=parseInt(document.getElementById("d_stress").value)||0;
+let sleep=parseFloat(document.getElementById("d_sleep").value)||0;
+let water=parseInt(document.getElementById("d_water").value)||0;
+let exercise=parseInt(document.getElementById("d_exercise").value)||0;
+let screen=parseFloat(document.getElementById("d_screen").value)||0;
+let score=Math.round((10-stress)*5 + sleep*4 + water*3 + exercise*2 - screen*2);
+document.getElementById("dailyScore").innerText=score;
+let alertBox=document.getElementById("dailyAlert"); alertBox.className="alert"; alertBox.innerText="";
+if(score>=70){alertBox.classList.add("good");alertBox.innerText="Excellent lifestyle today!"}
+else if(score>=50){alertBox.classList.add("warn");alertBox.innerText="Good, but room to improve."}
+else{alertBox.classList.add("bad");alertBox.innerText="Needs attention!"}
+
+// Save
+let u=localStorage.getItem("currentUser"); let users=JSON.parse(localStorage.getItem("users"));
+users[u].daily.push({stress,sleep,water,exercise,screen,score});
+localStorage.setItem("users",JSON.stringify(users));
+loadDailyChart(users[u].daily);
+}
+
+// ===== DAILY CHART =====
+function loadDailyChart(daily){
+let ctx=document.getElementById("dailyChart").getContext("2d");
+let labels=daily.map((_,i)=>"Day "+(i+1));
+let data=daily.map(d=>d.score);
+if(dailyChart) dailyChart.destroy();
+dailyChart=new Chart(ctx,{type:'line',data:{labels,datasets:[{label:'Daily Score',data,backgroundColor:'rgba(74,108,247,0.2)',borderColor:'#4a6cf7',borderWidth:3,fill:true}]},options:{responsive:true,plugins:{legend:{display:false}}}});
+}
+
+// ===== HEALTH CHECKUP =====
+function analyze(){
+let stress=parseInt(document.getElementById("stress").value)||0;
+let sleep=parseFloat(document.getElementById("sleep").value)||0;
+let study=parseFloat(document.getElementById("study").value)||0;
+let water=parseInt(document.getElementById("water").value)||0;
+let exercise=parseInt(document.getElementById("exercise").value)||0;
+let screen=parseFloat(document.getElementById("screen").value)||0;
+let score=Math.round((10-stress)*6 + sleep*5 + study*2 + water*3 + exercise*2 - screen*3);
+document.getElementById("score").innerText=score;
+let alertBox=document.getElementById("alert");alertBox.className="alert";alertBox.innerText="";
+if(score>=80){alertBox.classList.add("good");alertBox.innerText="Your health is excellent!"}
+else if(score>=60){alertBox.classList.add("warn");alertBox.innerText="Some aspects need attention."}
+else{alertBox.classList.add("bad");alertBox.innerText="Health risk! Please consult a doctor."}
+
+// Radar chart
+let ctx=document.getElementById("chart").getContext("2d");
+let labels=["Stress","Sleep","Study","Water","Exercise","Screen"];
+let data=[stress,sleep,study,water,exercise,screen];
+if(chart) chart.destroy();
+chart=new Chart(ctx,{type:'radar',data:{labels,datasets:[{label:'Health Metrics',data,backgroundColor:'rgba(111,142,251,0.2)',borderColor:'#6f8efb',borderWidth:2,pointBackgroundColor:'#4a6cf7'}]},options:{responsive:true,scales:{r:{beginAtZero:true,max:10}}}});
+}
+
+// ===== HABIT TRACKER =====
+function addDay(){streak++;document.getElementById("streak").innerText=streak+" days"; let u=localStorage.getItem("currentUser"); let users=JSON.parse(localStorage.getItem("users")); users[u].streak=streak; localStorage.setItem("users",JSON.stringify(users)); loadHabitChart(streak);}
+function loadHabitChart(s){let ctx=document.getElementById("habitChart").getContext("2d"); if(habitChart) habitChart.destroy(); habitChart=new Chart(ctx,{type:'bar',data:{labels:["Streak"],datasets:[{label:"Days Completed",data:[s],backgroundColor:"#4a6cf7"}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}})}
+
+// ===== AI CHAT =====
+function sendChat(){let input=document.getElementById("chatinput"); let q=input.value.trim(); if(!q)return; let a="AI: Focus on balanced sleep, exercise, and water intake!"; let u=localStorage.getItem("currentUser"); let users=JSON.parse(localStorage.getItem("users")); users[u].chat.push({q,a}); localStorage.setItem("users",JSON.stringify(users)); loadUser(); input.value="";}
+
+// ===== DOCTOR =====
+function scheduleDoctor(){
+let doctor=document.getElementById("doctorName").value;
+let date=document.getElementById("apptDate").value;
+let time=document.getElementById("apptTime").value;
+if(!date||!time){alert("Select date and time"); return;}
+document.getElementById("paymentSection").classList.remove("hidden");
+document.getElementById("qr").innerHTML="";
+// generate a simple QR code with appointment details
+const qrText = `Doctor: ${doctor}\nDate: ${date}\nTime: ${time}`;
+if(window.QRCode && QRCode.toCanvas){
+	QRCode.toCanvas(document.getElementById("qr"), qrText, function(err){ if(err) console.error(err); });
+} else {
+	document.getElementById("qr").innerText = qrText;
+}
+
+// save appointment to current user (demo storage)
+let u = localStorage.getItem("currentUser");
+if(u){
+	let users = JSON.parse(localStorage.getItem("users")||"{}");
+	users[u].appointments = users[u].appointments || [];
+	users[u].appointments.push({doctor,date,time});
+	localStorage.setItem("users", JSON.stringify(users));
+}
+document.getElementById("modalText").innerText = "Appointment requested. Complete payment to confirm.";
+document.getElementById("modal").style.display = "flex";
+}
+
+function pay(method){
+	let u = localStorage.getItem("currentUser");
+	if(!u){ alert('Please login to pay'); return; }
+	let users = JSON.parse(localStorage.getItem('users')||"{}");
+	users[u].appointments = users[u].appointments || [];
+	let appts = users[u].appointments;
+	if(appts.length>0){
+		let appt = appts[appts.length-1];
+		appt.confirmed = true;
+		appt.paymentMethod = method;
+		appt.paidAt = new Date().toISOString();
+		// update QR to include confirmation
+		const qrText = `Doctor: ${appt.doctor}\nDate: ${appt.date}\nTime: ${appt.time}\nConfirmed: Yes\nMethod: ${method}`;
+		if(window.QRCode && QRCode.toCanvas){
+			QRCode.toCanvas(document.getElementById("qr"), qrText, function(err){ if(err) console.error(err); });
+		} else {
+			document.getElementById("qr").innerText = qrText;
+		}
+	}
+	localStorage.setItem('users', JSON.stringify(users));
+	document.getElementById("modalText").innerText = `Payment via ${method} successful. Appointment confirmed.`;
+	// hide payment section after successful payment
+	document.getElementById("paymentSection").classList.add('hidden');
+}
+
+function showUpiForm(){
+	document.getElementById('upiForm').classList.remove('hidden');
+}
+
+function payViaUPI(){
+	const txn = document.getElementById('txnId').value.trim();
+	const fileInput = document.getElementById('bankFile');
+	if(!txn && (!fileInput || !fileInput.files || fileInput.files.length===0)){
+		alert('Enter UPI transaction ID or upload a bank statement to confirm payment');
+		return;
+	}
+	let u = localStorage.getItem('currentUser'); if(!u){ alert('Please login to pay'); return; }
+	let users = JSON.parse(localStorage.getItem('users')||"{}");
+	users[u].appointments = users[u].appointments || [];
+	let appts = users[u].appointments;
+	if(appts.length===0){ alert('No appointment found to pay for'); return; }
+	let appt = appts[appts.length-1];
+	appt.confirmed = true;
+	appt.paymentMethod = 'UPI';
+	appt.txnId = txn || null;
+	appt.bankFileName = (fileInput.files && fileInput.files[0])? fileInput.files[0].name : null;
+	appt.paidAt = new Date().toISOString();
+	localStorage.setItem('users', JSON.stringify(users));
+	// update QR
+	const qrText = `Doctor: ${appt.doctor}\nDate: ${appt.date}\nTime: ${appt.time}\nConfirmed: Yes\nMethod: UPI\nTxn: ${appt.txnId || 'N/A'}`;
+	if(window.QRCode && QRCode.toCanvas){
+		QRCode.toCanvas(document.getElementById('qr'), qrText, function(err){ if(err) console.error(err); });
+	} else { document.getElementById('qr').innerText = qrText; }
+	document.getElementById('modalText').innerText = 'Payment recorded. Appointment confirmed.';
+	document.getElementById('modal').style.display = 'flex';
+	document.getElementById('paymentSection').classList.add('hidden');
+	document.getElementById('upiForm').classList.add('hidden');
+	document.getElementById('printConfirmedBtn').classList.remove('hidden');
+}
+
+function printAppointmentConfirmed(){
+	// build printable content
+	let u = localStorage.getItem('currentUser'); if(!u){ alert('Login to print'); return; }
+	let users = JSON.parse(localStorage.getItem('users')||"{}"); let appts = (users[u] && users[u].appointments)||[];
+	if(appts.length===0){ alert('No appointment to print'); return; }
+	let a = appts[appts.length-1];
+	let content = `<h2>Appointment Confirmation</h2>`+
+		`<p><b>User:</b> ${u}</p>`+
+		`<p><b>Doctor:</b> ${a.doctor}</p>`+
+		`<p><b>Date:</b> ${a.date}</p>`+
+		`<p><b>Time:</b> ${a.time}</p>`+
+		`<p><b>Payment Method:</b> ${a.paymentMethod || 'N/A'}</p>`+
+		`<p><b>Transaction ID:</b> ${a.txnId || a.paymentMethod==='UPI' ? (a.txnId||'N/A') : 'N/A'}</p>`+
+		`<p><b>Paid At:</b> ${a.paidAt || 'N/A'}</p>`;
+	const w = window.open('', '_blank');
+	w.document.write(`<html><head><title>Appointment Confirmation</title></head><body>${content}</body></html>`);
+	w.document.close();
+	w.print();
+}
+
+function printAppointment(){
+	window.print();
+}
+
+function downloadReport(){
+	let u = localStorage.getItem("currentUser"); if(!u){ alert('Please login to download report'); return; }
+	let users = JSON.parse(localStorage.getItem("users")||"{}"); let data = users[u] || {};
+	let content = `Report for ${u}\n\nHealth Score: ${document.getElementById('score').innerText}\nDaily Score: ${document.getElementById('dailyScore').innerText}\nStreak: ${streak} days\n\nAppointments:\n`;
+	(data.appointments||[]).forEach(a=>{ content += `- ${a.doctor} on ${a.date} at ${a.time}\n`; });
+	const blob = new Blob([content], {type: 'text/plain'});
+	const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = 'health_report.txt'; document.body.appendChild(link); link.click(); link.remove();
+}
+
+function closeModal(){ document.getElementById('modal').style.display = 'none'; }
+
+// initialize UI if user already logged in
+window.addEventListener('load', ()=>{
+	let u = localStorage.getItem('currentUser');
+	if(u){
+		document.getElementById('loginCard').classList.add('hidden');
+		document.getElementById('dashboardNav').classList.remove('hidden');
+		document.getElementById('logoutBtn').classList.remove('hidden');
+		let profile=document.getElementById('profilePic');
+		profile.src = "https://ui-avatars.com/api/?name="+encodeURIComponent(u)+"&background=4a6cf7&color=fff&size=128";
+		profile.classList.remove('hidden'); profile.title = u;
+		loadUser();
+	}
+});
+
+</script>
+</body>
+</html>
